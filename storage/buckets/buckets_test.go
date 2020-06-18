@@ -19,10 +19,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/golang-samples/internal/testutil"
 )
 
@@ -236,6 +238,33 @@ func TestBucketLock(t *testing.T) {
 
 	if err := createBucket(ioutil.Discard, tc.ProjectID, bucketName); err != nil {
 		t.Fatalf("createBucket: %v", err)
+	}
+}
+func TestObjectLifecycleManagement(t *testing.T) {
+	tc := testutil.SystemTest(t)
+	bucketName := tc.ProjectID + "-storage-buckets-tests"
+	lifecycle := storage.Lifecycle{
+		Rules: []storage.LifecycleRule{{
+			Action: storage.LifecycleAction{
+				Type: "Delete",
+			},
+			Condition: storage.LifecycleCondition{
+				AgeInDays: 20,
+			},
+		}}}
+	if err := enableObjectLifecycleManagement(os.Stdout, bucketName); err != nil {
+		t.Fatalf("enableObjectLifecycleManagement: %v", err)
+	}
+
+	attrs, err := getUniformBucketLevelAccess(ioutil.Discard, bucketName)
+	if err != nil {
+		t.Fatalf("getUniformBucketLevelAccess: %v", err)
+	}
+	fmt.Println("attr:                 ", attrs.Lifecycle)
+	fmt.Println("attr to compare with: ", lifecycle)
+
+	if got, want := attrs.Lifecycle, lifecycle; !reflect.DeepEqual(got, want) {
+		t.Errorf("lifecycle rule: got %v, want %v", got, want)
 	}
 }
 
