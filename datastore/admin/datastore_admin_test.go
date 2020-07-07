@@ -57,7 +57,6 @@ func TestAdmin(t *testing.T) {
 	now := time.Now().UTC()
 	uidSpace := uid.NewSpace("storage-bucket-test", &uid.Options{Time: now})
 	bucketName := uidSpace.New()
-	// bucketName := tc.ProjectID + "-storage-bucket-test-"
 	testutil.CleanBucket(ctx, t, tc.ProjectID, bucketName)
 
 	resp, err := entitiesExport(ioutil.Discard, tc.ProjectID, "gs://"+bucketName)
